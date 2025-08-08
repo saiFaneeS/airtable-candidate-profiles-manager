@@ -26,12 +26,15 @@ import {
 import Airtable from "airtable";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { Textarea } from "@/components/ui/textarea"; // Add this import if you have a Textarea component
 
 const CandidateProfile = () => {
   const { id } = useParams();
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("about");
+  const [feedback, setFeedback] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   useEffect(() => {
     const fetchCandidate = async () => {
@@ -54,6 +57,13 @@ const CandidateProfile = () => {
 
     fetchCandidate();
   }, [id]);
+
+  const handleFeedbackSubmit = (e) => {
+    e.preventDefault();
+    // You can add logic to send feedback to your backend or Airtable here
+    setFeedbackSubmitted(true);
+    setTimeout(() => setFeedbackSubmitted(false), 3000);
+  };
 
   const getInitials = (name) => {
     if (!name) return "NA";
@@ -118,6 +128,20 @@ const CandidateProfile = () => {
     }
 
     return stars;
+  };
+
+  // Helper to get embeddable video URL (supports YouTube)
+  const getEmbedUrl = (url) => {
+    if (!url) return null;
+    // YouTube link
+    const ytMatch = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/
+    );
+    if (ytMatch) {
+      return `https://www.youtube.com/embed/${ytMatch[1]}`;
+    }
+    // Add more platforms as needed
+    return url;
   };
 
   if (loading) {
@@ -290,26 +314,18 @@ const CandidateProfile = () => {
                       {fields["Intro Video Link"] && (
                         <div>
                           <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center">
+                            <Video className="w-5 h-5 mr-2 text-primary" />
                             Video Call Link
                           </h3>
-                          <Card className="p-6 bg-muted/30 border-dashed">
-                            <div className="text-center">
-                              <Video className="w-12 h-12 mx-auto mb-4 text-primary" />
-                              <p className="text-muted-foreground mb-4">
-                                Join a video call with the candidate
-                              </p>
-                              <Button asChild variant="outline">
-                                <a
-                                  href={fields["Intro Video Link"]}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  Join Video Call
-                                </a>
-                              </Button>
-                            </div>
-                          </Card>
+                          <div className="relative w-full h-0 pb-[56.25%] -xl overflow-hidden shadow-lg">
+                            <iframe
+                              className="absolute top-0 left-0 w-full h-full"
+                              src={getEmbedUrl(fields["Intro Video Link"])}
+                              title="Video Call"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -541,7 +557,7 @@ const CandidateProfile = () => {
                       rel="noopener noreferrer"
                     >
                       <Calendar className="w-4 h-4 mr-2" />
-                      Schedule Meeting
+                      Meeting Link
                     </a>
                   </Button>
                 ) : (
@@ -579,6 +595,30 @@ const CandidateProfile = () => {
                     </p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Feedback Section */}
+            <Card className="border-0 shadow-lg">
+              <CardContent className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Feedback
+                </h3>
+                <form onSubmit={handleFeedbackSubmit} className="space-y-2">
+                  <Textarea
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Leave your feedback about this candidate..."
+                    rows={3}
+                    className="resize-none"
+                  />
+                  <Button type="submit" disabled={!feedback.trim() || feedbackSubmitted}>
+                    Submit
+                  </Button>
+                  {feedbackSubmitted && (
+                    <p className="text-green-600 text-sm mt-2">Feedback submitted!</p>
+                  )}
+                </form>
               </CardContent>
             </Card>
           </div>
