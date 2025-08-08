@@ -1,5 +1,6 @@
 import { Poppins, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -18,8 +19,13 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${poppins.className} antialiased`}>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${poppins.className} antialiased`}>
+        <div className="fixed top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
+        {children}
+      </body>
     </html>
   );
 }
